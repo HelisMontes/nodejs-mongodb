@@ -5,6 +5,12 @@ IMPORTAMOS EL MODELO
 const Slide = require ('../modelos/slide.modelo');
 
 /*=============================================
+ADMINISTRACIÓN DE CARPETAS Y ARCHIVOS EN NODEJS
+=============================================*/
+
+const fs = require('fs');
+
+/*=============================================
 PETICIONES GET
 =============================================*/
 
@@ -43,43 +49,85 @@ let mostrarSlide =  (req, res)=>{
                 total,
                 data
             })
-        
-        })
-
+        });
 	}) 
 }
 
 /*=============================================
-PETICIONES GET
+PETICIONES POST
 =============================================*/
 
 let crearSlide =  (req, res)=>{
     //obtenemos el cuerpo del formualrio
     let body = req.body;
-    // se obtienen los datos del formulario para enviarlos al modelo
-    let crearSlide = new Slide({
-        imagen: body.imagen,
-        titulo: body.titulo,
-        descripcion: body.descripcion
-    })
 
-    //Guardamos en MongoDB
-	//https://mongoosejs.com/docs/api.html#model_Model-save
-	crearSlide.save((err, data)=>{
+	//Preguntamos si viene un archivo
+	if(!req.files){
+		return res.json({
+			status:500,
+			mensaje: "La imagen no puede ir vacía"
+		})
+	}
+	// Capturamos el archivo
+	let archivo = req.files.archivo;
+
+	//Validamos la extensión del archivo
+	if(archivo.mimetype != 'image/jpeg' && archivo.mimetype != 'image/png'){
+		return res.json({
+			status:400,
+			mensaje: "la imagen debe ser formato JPG o PNG"
+		})
+	}
+
+	//Validamos el tamaño del archivo
+	if(archivo.size > 2000000){
+		return res.json({
+			status:400,
+			mensaje: "la imagen debe ser inferior a 2MB"
+		})
+	}
+
+	//Cambiar nombre al archivo
+	let nombre = Math.floor(Math.random()*10000);
+
+	//Capturar la extensión del archivo
+	let extension = archivo.name.split('.').pop();
+
+	//Movemos el archivo a la carpeta
+	archivo.mv(`./archivos/slide/${nombre}.${extension}`, err => {
 		if(err){
 			return res.json({
-				status:400,
-				mensaje: "Error al almacenar el slide",
+				status:500,
+				mensaje: "Error al guardar la imagen",
 				err
 			})
 		}
-		res.json({
-			status:200,
-			data,
-			mensaje:"El slide ha sido creado con éxito"
+
+		//Obtenemos los datos del formulario para pasarlos al modelo
+		let slide = new Slide({
+			imagen:`${nombre}.${extension}`,
+			titulo:body.titulo,
+			descripcion:body.descripcion
+		})
+
+		//Guardamos en MongoDB
+		//https://mongoosejs.com/docs/api.html#model_Model-save
+		slide.save((err, data)=>{
+			if(err){
+				return res.json({
+					status:400,
+					mensaje: "Error al almacenar el slide",
+					err
+				})
+			}
+
+			res.json({
+				status:200,
+				data,
+				mensaje:"El slide ha sido creado con éxito"
+			})
 		})
 	})
-
 }
 
 /*=============================================
