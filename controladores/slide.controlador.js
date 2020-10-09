@@ -54,10 +54,57 @@ let mostrarSlide =  (req, res)=>{
 }
 
 /*=============================================
+VALIDAR IMAGEN
+=============================================*/
+let Validarimagen = (archivo, res) =>{
+	let result = []
+	//Validamos la extensión del archivo
+	if(archivo.mimetype != 'image/jpeg' && archivo.mimetype != 'image/png'){
+		return {
+			result:false,
+			mensaje: "la imagen debe ser formato JPG o PNG"
+		}
+		result.push(true);
+	}
+
+	//Validamos el tamaño del archivo
+	if(archivo.size > 2000000){
+		return {
+			result:false,
+			mensaje: "la imagen debe ser inferior a 2MB"
+		}
+	}
+
+	//Cambiar nombre al archivo
+	let nombre = Math.floor(Math.random()*10000);
+
+	//Capturar la extensión del archivo
+	let extension = archivo.name.split('.').pop();
+
+	
+	//Movemos el archivo a la carpeta
+	archivo.mv(`./archivos/slide/${nombre}.${extension}`, err => {
+		if(err){
+			return {
+				result:false,
+				mensaje: "Error al guardar la imagen",
+				err
+			}
+		}
+
+	})
+	
+	return {
+		result:true,
+		mensaje: `${nombre}.${extension}`
+	};
+}
+
+/*=============================================
 PETICIONES POST
 =============================================*/
 
-let crearSlide =  (req, res)=>{
+let crearSlide = async (req, res)=>{
     //obtenemos el cuerpo del formualrio
     let body = req.body;
 
@@ -70,62 +117,37 @@ let crearSlide =  (req, res)=>{
 	}
 	// Capturamos el archivo
 	let archivo = req.files.archivo;
+	let Nombreimagen = await Validarimagen (archivo, res);
 
-	//Validamos la extensión del archivo
-	if(archivo.mimetype != 'image/jpeg' && archivo.mimetype != 'image/png'){
+	if(!Nombreimagen.result){
 		return res.json({
-			status:400,
-			mensaje: "la imagen debe ser formato JPG o PNG"
+			status:500,
+			mensaje: Nombreimagen.mensaje
 		})
 	}
 
-	//Validamos el tamaño del archivo
-	if(archivo.size > 2000000){
-		return res.json({
-			status:400,
-			mensaje: "la imagen debe ser inferior a 2MB"
-		})
-	}
+	//Obtenemos los datos del formulario para pasarlos al modelo
+	let slide = new Slide({
+		imagen: Nombreimagen.mensaje,
+		titulo: body.titulo,
+		descripcion: body.descripcion
+	})
 
-	//Cambiar nombre al archivo
-	let nombre = Math.floor(Math.random()*10000);
-
-	//Capturar la extensión del archivo
-	let extension = archivo.name.split('.').pop();
-
-	//Movemos el archivo a la carpeta
-	archivo.mv(`./archivos/slide/${nombre}.${extension}`, err => {
+	//Guardamos en MongoDB
+	//https://mongoosejs.com/docs/api.html#model_Model-save
+	slide.save((err, data)=>{
 		if(err){
 			return res.json({
-				status:500,
-				mensaje: "Error al guardar la imagen",
+				status:400,
+				mensaje: "Error al almacenar el slide",
 				err
 			})
 		}
 
-		//Obtenemos los datos del formulario para pasarlos al modelo
-		let slide = new Slide({
-			imagen:`${nombre}.${extension}`,
-			titulo:body.titulo,
-			descripcion:body.descripcion
-		})
-
-		//Guardamos en MongoDB
-		//https://mongoosejs.com/docs/api.html#model_Model-save
-		slide.save((err, data)=>{
-			if(err){
-				return res.json({
-					status:400,
-					mensaje: "Error al almacenar el slide",
-					err
-				})
-			}
-
-			res.json({
-				status:200,
-				data,
-				mensaje:"El slide ha sido creado con éxito"
-			})
+		res.json({
+			status:200,
+			data,
+			mensaje:"El slide ha sido creado con éxito"
 		})
 	})
 }
