@@ -21,6 +21,14 @@ MIDDLEWARE PARA FILEUPLOAD
 // default options express-fileupload
 app.use(fileUpload());
 
+/*=============================================
+MONGOOSE DEPRECATIONS
+=============================================*/
+// https://mongoosejs.com/docs/deprecations.html
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
 
 /*=============================================
 MIDDLEWARE PARA BODY PARSER

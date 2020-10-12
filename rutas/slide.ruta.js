@@ -16,6 +16,7 @@ CREAMOS LA RUTA
 =============================================*/
 app.get('/mostrar-slide', Slide.mostrarSlide);
 app.post('/crear-slide', Slide.crearSlide);
+app.put('/editar-slide/:id', Slide.editarSlide);
 
 
 /*=============================================
