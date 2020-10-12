@@ -230,7 +230,6 @@ const editarSlide = (req, res)=>{
         	try {
 				result = await Slide.findByIdAndUpdate(id, datosSlide, {new:true, runValidators:true})
 			} catch (err) {
-				console.log(`entro en el catch`)
 				return  {
 					status:false,
 					mensaje: "Error al modificar los datos en la BD",
@@ -247,14 +246,12 @@ const editarSlide = (req, res)=>{
 		SINCRONIZAMOS LAS TAREAS
 		=============================================*/
 		const actualizarBD = async () =>{
-			console.log("Entro en sincronizar")
 			const cambioArchivo = await validarCambioArchivo(req, rutaImagen);
 			if(!cambioArchivo.status){
 				return res.json({
 					status: 404,
 					mensaje: cambioArchivo.mensaje,
 				})
-				console.log(`${cambioArchivo.err}`);
 			}
 			if(cambioArchivo.nueva){
 				if(fs.existsSync(`./archivos/slide/${rutaImagen}`)){
@@ -267,7 +264,6 @@ const editarSlide = (req, res)=>{
 					status: 404,
 					mensaje: registrosBD.mensaje,
 				});
-				console.log(`${registrosBD.err}`);
 			};
 			const datos = registrosBD.res
 			res.json({
