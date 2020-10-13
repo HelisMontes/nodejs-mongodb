@@ -277,11 +277,59 @@ const editarSlide = (req, res)=>{
 
 }
 
+const borrarSlide = (req, res)=>{
+	//Capturamos el id del slide a borrar con la palabra reservada params
+	let id = req.params.id;
+
+	Slide.findById(id, ( err, data) =>{
+		//Validamos que no ocurra error en el proceso
+		if(err){
+			return res.json({
+				status: 500,
+				mensaje:"Error en el servidor",
+				err
+			})
+		};
+
+		//Validamos que el Slide exista
+		if(!data){
+			return res.json({
+				status: 404,
+				mensaje:"El slide no existe en la Base de datos"
+			})	
+		};
+		//Se borra la imagen de la carpeta
+		if(fs.existsSync(`./archivos/slide/${data.imagen}`)){
+			fs.unlinkSync(`./archivos/slide/${data.imagen}`);
+		}
+		
+
+		// Borramos registro en MongoDB
+		//https://mongoosejs.com/docs/api.html#model_Model.findByIdAndRemove
+		Slide.findByIdAndRemove(id, (err, data) =>{
+			if(err){
+				return res.json({
+					status: 500,
+					mensaje:"Error al borrar el slide",
+					err
+				})
+			}
+
+			res.json({
+				status:200,
+				mensaje: "El Slide ha sido borrado correctamente"
+			})
+		})
+
+	})
+}
+
 /*=============================================
 EXPORTAMOS FUNCIONES DEL CONTROLADOR
 =============================================*/
 module.exports = {
     mostrarSlide,
 	crearSlide,
-	editarSlide
+	editarSlide,
+	borrarSlide
 }
