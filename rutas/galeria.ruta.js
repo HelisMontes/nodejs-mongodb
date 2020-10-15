@@ -14,7 +14,11 @@ const Galeria = require ('../controladores/galeria.controlador')
 /*=============================================
 CREAMOS LA RUTA
 =============================================*/
-app.get('/mostrar-galeria', Galeria.mostrarGaleria)
+app.get('/mostrar-galeria', Galeria.mostrarGaleria);
+app.post('/crear-galeria', Galeria.crearGaleria);
+app.put('/editar-galeria/:id', Galeria.editarGaleria);
+app.delete('/borrar-galeria/:id', Galeria.borrarGaleria);
+
 
 
 /*=============================================
